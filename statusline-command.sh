@@ -32,7 +32,7 @@ fmt_time_of_day() {
   is_num "$epoch" || { echo "--"; return; }
   epoch_int="${epoch%%.*}"
   { [ -z "$epoch_int" ] || [ "$epoch_int" -le 0 ] 2>/dev/null; } && { echo "--"; return; }
-  date -d "@$epoch_int" +"%I:%M%P" 2>/dev/null || date -r "$epoch_int" +"%I:%M%P" 2>/dev/null || echo "--"
+  date -d "@$epoch_int" +"%I:%M%p" 2>/dev/null || date -r "$epoch_int" +"%I:%M%p" 2>/dev/null || echo "--"
 }
 
 # Turn an epoch timestamp into a local weekday/date/time, e.g. "Tue 10 Jan 04:45am"
@@ -41,7 +41,7 @@ fmt_weekday_time() {
   is_num "$epoch" || { echo "--"; return; }
   epoch_int="${epoch%%.*}"
   { [ -z "$epoch_int" ] || [ "$epoch_int" -le 0 ] 2>/dev/null; } && { echo "--"; return; }
-  date -d "@$epoch_int" +"%a %d %b %I:%M%P" 2>/dev/null || date -r "$epoch_int" +"%a %d %b %I:%M%P" 2>/dev/null || echo "--"
+  date -d "@$epoch_int" +"%a %d %b %I:%M%p" 2>/dev/null || date -r "$epoch_int" +"%a %d %b %I:%M%p" 2>/dev/null || echo "--"
 }
 
 # Turn a raw token count into a short label, e.g. 45231 -> 45k, 1200000 -> 1.2M
