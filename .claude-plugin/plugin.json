@@ -1,0 +1,20 @@
+{
+  "name": "claude-status-bar",
+  "displayName": "Claude Status Bar",
+  "version": "1.0.0",
+  "description": "Three-line status bar: rate-limit bars with reset times, project/branch/git dot, and effort/thinking/output-style.",
+  "author": {
+    "name": "Bikram Lama",
+    "email": "contact@bikramlama.com.np"
+  },
+  "homepage": "https://github.com/TheBikramLama/claude-status-bar",
+  "repository": "https://github.com/TheBikramLama/claude-status-bar",
+  "license": "MIT",
+  "keywords": [
+    "statusline",
+    "status-bar",
+    "rate-limits",
+    "context"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

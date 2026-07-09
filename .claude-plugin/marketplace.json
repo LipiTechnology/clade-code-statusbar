@@ -1,0 +1,14 @@
+{
+  "name": "claude-status-bar",
+  "owner": {
+    "name": "Bikram Lama",
+    "email": "contact@bikramlama.com.np"
+  },
+  "plugins": [
+    {
+      "name": "claude-status-bar",
+      "source": "./",
+      "description": "Three-line Claude Code status bar."
+    }
+  ]
+}
