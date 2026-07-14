@@ -151,10 +151,23 @@ make_bar() {
 script_source="${BASH_SOURCE[0]:-$0}"
 script_dir="$(CDPATH= cd -- "$(dirname -- "$script_source")" 2>/dev/null && pwd -P)"
 
+# Config dir: a custom $CLAUDE_CONFIG_DIR wins, else Claude Code's default.
+# Note the default account file is $HOME/.claude.json (a file beside the dir),
+# but a custom config dir keeps it inside as $CLAUDE_CONFIG_DIR/.claude.json.
+if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
+  config_dir="$CLAUDE_CONFIG_DIR"
+  claude_json="$CLAUDE_CONFIG_DIR/.claude.json"
+elif [ -n "$HOME" ]; then
+  config_dir="$HOME/.claude"
+  claude_json="$HOME/.claude.json"
+else
+  config_dir="" claude_json=""
+fi
+
 cache_dir=""
-if [ -n "$HOME" ]; then
-  if [ -d "$HOME/.claude" ] || mkdir -p "$HOME/.claude" 2>/dev/null; then
-    [ -w "$HOME/.claude" ] && cache_dir="$HOME/.claude"
+if [ -n "$config_dir" ]; then
+  if [ -d "$config_dir" ] || mkdir -p "$config_dir" 2>/dev/null; then
+    [ -w "$config_dir" ] && cache_dir="$config_dir"
   fi
 fi
 if [ -z "$cache_dir" ] && [ -n "$script_dir" ] && [ -w "$script_dir" ]; then
@@ -328,7 +341,6 @@ line1=$(printf '%s %s \033[2m|\033[0m \033[2m🗓️\033[0m %s %s \033[2m|\033[0
 # always derive it from $HOME.
 
 account_label=""
-claude_json="${HOME:+$HOME/.claude.json}"
 if [ -n "$claude_json" ] && [ -r "$claude_json" ]; then
   org_name="" email_addr="" acct_lines=""
   if command -v jq >/dev/null 2>&1; then
