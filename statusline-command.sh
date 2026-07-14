@@ -153,12 +153,17 @@ script_dir="$(CDPATH= cd -- "$(dirname -- "$script_source")" 2>/dev/null && pwd 
 
 # Config dir: a custom $CLAUDE_CONFIG_DIR wins (for account isolation), else
 # Claude Code's default ~/.claude. The account file is $CLAUDE_CONFIG_DIR/.claude.json
-# under a custom dir but $HOME/.claude.json by default; try both, config dir first.
+# under a custom dir but $HOME/.claude.json by default. When a custom dir is in
+# use we NEVER fall back to $HOME/.claude.json — that belongs to a different
+# (main) account, and leaking its label into an isolated instance would show
+# the wrong identity. Better to omit the label than show another account's.
 config_dir="${CLAUDE_CONFIG_DIR:-${HOME:+$HOME/.claude}}"
 claude_json=""
-for cand in "${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/.claude.json}" "${HOME:+$HOME/.claude.json}"; do
-  [ -n "$cand" ] && [ -r "$cand" ] && { claude_json="$cand"; break; }
-done
+if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
+  [ -r "$CLAUDE_CONFIG_DIR/.claude.json" ] && claude_json="$CLAUDE_CONFIG_DIR/.claude.json"
+elif [ -n "${HOME:-}" ] && [ -r "$HOME/.claude.json" ]; then
+  claude_json="$HOME/.claude.json"
+fi
 
 cache_dir=""
 if [ -n "$config_dir" ]; then
@@ -247,7 +252,10 @@ for f in [
 fi
 
 if [ -n "$json_lines" ]; then
-  mapfile -t _fields <<< "$json_lines"
+  # Read line-by-line instead of mapfile: macOS ships bash 3.2, which has no
+  # mapfile builtin, and this script must run under /bin/bash there.
+  _fields=()
+  while IFS= read -r _fline; do _fields+=("$_fline"); done <<< "$json_lines"
   model="${_fields[0]:-}"
   dir="${_fields[1]:-}"
   five_pct="${_fields[2]:-}"
@@ -361,7 +369,9 @@ print(oauth.get("emailAddress") or "")
   fi
 
   if [ -n "$acct_lines" ]; then
-    mapfile -t _acct_fields <<< "$acct_lines"
+    # bash-3.2-safe (no mapfile on macOS's /bin/bash).
+    _acct_fields=()
+    while IFS= read -r _aline; do _acct_fields+=("$_aline"); done <<< "$acct_lines"
     org_name="${_acct_fields[0]:-}"
     email_addr="${_acct_fields[1]:-}"
   fi
