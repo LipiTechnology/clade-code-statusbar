@@ -151,18 +151,14 @@ make_bar() {
 script_source="${BASH_SOURCE[0]:-$0}"
 script_dir="$(CDPATH= cd -- "$(dirname -- "$script_source")" 2>/dev/null && pwd -P)"
 
-# Config dir: a custom $CLAUDE_CONFIG_DIR wins, else Claude Code's default.
-# Note the default account file is $HOME/.claude.json (a file beside the dir),
-# but a custom config dir keeps it inside as $CLAUDE_CONFIG_DIR/.claude.json.
-if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
-  config_dir="$CLAUDE_CONFIG_DIR"
-  claude_json="$CLAUDE_CONFIG_DIR/.claude.json"
-elif [ -n "$HOME" ]; then
-  config_dir="$HOME/.claude"
-  claude_json="$HOME/.claude.json"
-else
-  config_dir="" claude_json=""
-fi
+# Config dir: a custom $CLAUDE_CONFIG_DIR wins (for account isolation), else
+# Claude Code's default ~/.claude. The account file is $CLAUDE_CONFIG_DIR/.claude.json
+# under a custom dir but $HOME/.claude.json by default; try both, config dir first.
+config_dir="${CLAUDE_CONFIG_DIR:-${HOME:+$HOME/.claude}}"
+claude_json=""
+for cand in "${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/.claude.json}" "${HOME:+$HOME/.claude.json}"; do
+  [ -n "$cand" ] && [ -r "$cand" ] && { claude_json="$cand"; break; }
+done
 
 cache_dir=""
 if [ -n "$config_dir" ]; then
