@@ -13,7 +13,12 @@ cp "$src_dir/statusline-command.sh" "$script"
 chmod +x "$script"
 echo "Installed $script"
 
-cmd="bash $script"
+# Pin the config dir if custom, so the script finds the right account file/cache.
+if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
+  cmd="CLAUDE_CONFIG_DIR=\"$CLAUDE_CONFIG_DIR\" bash \"$script\""
+else
+  cmd="bash \"$script\""
+fi
 
 # Wire up settings.json -> statusLine.command, preserving existing settings.
 if command -v jq >/dev/null 2>&1; then
