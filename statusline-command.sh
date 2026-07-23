@@ -422,11 +422,23 @@ branch=""
 dot=""
 if command -v git >/dev/null 2>&1 && git --no-optional-locks -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   branch=$(git --no-optional-locks -C "$dir" branch --show-current 2>/dev/null)
-  if [ -n "$(git --no-optional-locks -C "$dir" status --porcelain 2>/dev/null)" ]; then
-    dot=$(printf '\033[38;5;208m●\033[0m')
-  else
-    dot=$(printf '\033[32m●\033[0m')
+  # `git status` stats the whole worktree — 15s+ over sshfs/fuse mounts, which
+  # blows Claude Code's statusLine timeout so nothing renders. Cap at 1s; if it
+  # can't finish, skip the dot (branch still shows).
+  # ponytail: 1s wall-clock cap, per-dir TTL cache if the dropped dot on slow mounts matters
+  _st=$(mktemp)
+  ( git --no-optional-locks -C "$dir" status --porcelain 2>/dev/null >"$_st" ) & _gp=$!
+  ( sleep 1; kill "$_gp" 2>/dev/null ) & _kp=$!
+  disown "$_kp" 2>/dev/null
+  if wait "$_gp" 2>/dev/null; then
+    kill "$_kp" 2>/dev/null
+    if [ -s "$_st" ]; then
+      dot=$(printf '\033[38;5;208m●\033[0m')
+    else
+      dot=$(printf '\033[32m●\033[0m')
+    fi
   fi
+  rm -f "$_st"
 fi
 
 if [ -n "$branch" ]; then
